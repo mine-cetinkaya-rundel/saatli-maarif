@@ -6,13 +6,22 @@ library(glue)
 library(grid)
 library(suncalc)
 library(cowplot)
-library(magick)
 library(gggibbous)
 library(magick)
+library(showtext)
 
-# inputs -----------------------------------------------------------------------
+# add fonts --------------------------------------------------------------------
 
-# top
+font_add(family = "HelveticaCompressed", regular = "/Users/mine/Library/Fonts/HelveticaComp.ttf")
+font_add(family = "HelveticaNeue85Heavy", regular = "/Users/mine/Library/Fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
+
+# load data --------------------------------------------------------------------
+
+significant_days <- read_csv("significant-days.csv")
+birthdays <- read_csv("birthdays.csv")
+
+# top portion inputs -----------------------------------------------------------
+
 moon_stuff_today <- suncalc::getMoonIllumination(date = Sys.Date())
 moon_ratio <- moon_stuff_today$fraction
 moon_phase_value <- moon_stuff_today$phase
@@ -41,34 +50,50 @@ day_change_direction <- if_else(sign(sun_out_diff) == 1, "more", "less")
 day_change_minute_pluralization <- if_else(day_change_length == 1, "minute", "minutes")
 day_change_text <- glue("{day_change_length} {day_change_direction} {day_change_minute_pluralization}\nof daylight")
 
+# middle portion inputs --------------------------------------------------------
 
-# middle
-year  <- year(today())
+now <- now()
+today <- today()
+
+year  <- year(today)
 year_text <- glue("Year: {year}")
-month_no <- month(today())
+month_no <- month(today)
 month_text <- glue("Month: {month_no}")
-day_of_year <- yday(today())
+day_of_year <- yday(today)
 day_of_year_text <- glue("Day: {day_of_year}")
 year_days <- if_else(leap_year(2020), 366, 365)
 elapsed <- round(day_of_year / year_days, 2) * 100
 elapsed_text <- glue("Elapsed: {elapsed}%")
 
+month_name <- toupper(as.character(month(today, label = TRUE, abbr = FALSE)))
+day_of_month <- day(today)
+day_name <- toupper(as.character(wday(today, label = TRUE, abbr = FALSE)))
 
-month_name <- toupper(as.character(month(today(), label = TRUE, abbr = FALSE)))
-
-day_of_month <- day(today())
 time_local <- glue("{hour(now)}:{minute(now)}")
 time_TR <- glue("{hour(now)+3}:{minute(now)}") # need better tz conversion
 time_FR <- glue("{hour(now)+1}:{minute(now)}") # need better tz conversion
 time_ET <- glue("{hour(now)-5}:{minute(now)}") # need better tz conversion
 time_PT <- glue("{hour(now)-8}:{minute(now)}") # need better tz conversion
 
-day_name <- toupper(as.character(wday(today(), label = TRUE, abbr = FALSE)))
-holiday <- "Boxing Day"
-birthday <- "First Last"
-birthday_text <- glue("🎈{birthday}")
+
+significant_day <- significant_days %>%
+  filter(
+    month == month_no,
+    day   == day_of_month
+  ) %>%
+  pull(what)
+
+birthday <- birthdays %>%
+  filter(
+    month == month_no,
+    day   == day_of_month
+  ) %>%
+  pull(who)
+birthday_text <- glue("Birthday: {birthday}")
 
 chance_of_precipitation <- 0.8
+
+# bottom portion inputs --------------------------------------------------------
 
 function_pkg <- "dplyr"
 function_name <- "summarise"
@@ -76,6 +101,8 @@ function_title <- "Summarise each group to fewer rows"
 function_text <- glue("{function_pkg}::{function_name}()\n{function_title}")
 
 # plot -------------------------------------------------------------------------
+
+showtext_auto()
 
 ggplot() +
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
@@ -93,11 +120,11 @@ ggplot() +
   geom_text(aes(x = 0.35, y = 0.86), label = month_text, hjust = "center", size = 4) +
   geom_text(aes(x = 0.6, y = 0.86), label = day_of_year_text, hjust = "center", size = 4) +
   geom_text(aes(x = 1, y = 0.86), label = elapsed_text, hjust = "right", size = 4) +
-  geom_text(aes(x = 0.5, y = 0.78), label = month_name, hjust = "center", vjust = "center", size = 12) +
-  geom_text(aes(x = 0.2, y = 0.55), label = day_of_month, hjust = "center", vjust = "center", size = 50) +
-  geom_text(aes(x = 0.5, y = 0.27), label = day_name, hjust = "center", vjust = "bottom", size = 10) +
-  geom_text(aes(x = 0.5, y = 0.21), label = holiday, hjust = "center", vjust = "bottom", size = 5) +
-  geom_text(aes(x = 0.5, y = 0.16), label = birthday_text, hjust = "center", vjust = "bottom", size = 5) +
+  geom_text(aes(x = 0.5, y = 0.78), label = month_name, hjust = "center", vjust = "center", size = 12, family = "HelveticaNeue85Heavy") +
+  geom_text(aes(x = 0.2, y = 0.55), label = day_of_month, hjust = "center", vjust = "center", size = 70, family = "HelveticaCompressed") +
+  geom_text(aes(x = 0.5, y = 0.27), label = day_name, hjust = "center", vjust = "bottom", size = 10, family = "HelveticaNeue85Heavy") +
+  geom_text(aes(x = 0.5, y = 0.21), label = significant_day, hjust = "center", vjust = "bottom", size = 4) +
+  geom_text(aes(x = 0.5, y = 0.16), label = birthday_text, hjust = "center", vjust = "bottom", size = 4) +
   # bottom
   geom_text(aes(x = 0, y = 0), label = function_text, hjust = "left", vjust = "bottom", size = 5) +
   # theme
