@@ -4,42 +4,66 @@ library(tidyverse)
 library(lubridate)
 library(glue)
 library(grid)
+library(suncalc)
+library(cowplot)
+library(magick)
+library(gggibbous)
+library(magick)
 
 # inputs -----------------------------------------------------------------------
 
-now <- Sys.time()
-
 # top
-moon_phase <- "crescent"
+moon_stuff_today <- suncalc::getMoonIllumination(date = Sys.Date())
+moon_ratio <- moon_stuff_today$fraction
+moon_phase_value <- moon_stuff_today$phase
+moon_phase_text <- case_when(
+  moon_phase_value == 0                            ~ "New Moon",
+  moon_phase_value > 0 & moon_phase_value < 0.25   ~ "Waxing Crescent",
+  moon_phase_value == 0.25                         ~ "First Quarter",
+  moon_phase_value > 0.25 & moon_phase_value < 0.5 ~ "Waxing Gibbous",
+  moon_phase_value == 0.25                         ~ "Full Moon",
+  moon_phase_value > 0.5 & moon_phase_value < 0.75 ~ "Waning Gibbous",
+  moon_phase_value == 0.75                         ~ "Last Quarter",
+  moon_phase_value > 0.75                          ~ "Waning Crescent"
+)
+moon_phase_text <- str_replace(moon_phase_text, " ", "\n")
 
-day_change_length <- 1
-day_change_direction <- "longer"
-day_change_text <- glue("Day gets\n{day_change_direction} by\n{day_change_length} minute")
+sun_stuff_today <- suncalc::getSunlightTimes(date = Sys.Date(), lat = 55.9533, lon = -3.1883)
+sunrise_today <- format(sun_stuff_today$sunrise, "%H:%M")
+sunset_today <- format(sun_stuff_today$sunset, "%H:%M")
 
-sunrise <- "08:44"
-sunrise_text <- glue("Sunrise: {sunrise}")
-sunset <- "15:43"
-sunset_text <- glue("Sunset: {sunset}")
+sun_stuff_yesterday <- suncalc::getSunlightTimes(date = Sys.Date() - 1, lat = 55.9533, lon = -3.1883)
+sun_out_today <- sun_stuff_today$sunset - sun_stuff_today$sunrise
+sun_out_yesterday <- sun_stuff_yesterday$sunset - sun_stuff_yesterday$sunrise
+sun_out_diff <- as.numeric(sun_out_today - sun_out_yesterday) * 60
+day_change_length <- round(abs(sun_out_diff))
+day_change_direction <- if_else(sign(sun_out_diff) == 1, "more", "less")
+day_change_minute_pluralization <- if_else(day_change_length == 1, "minute", "minutes")
+day_change_text <- glue("{day_change_length} {day_change_direction} {day_change_minute_pluralization}\nof daylight")
 
 
 # middle
-year  <- year(now)
+year  <- year(today())
 year_text <- glue("Year: {year}")
-month_no <- month(now)
+month_no <- month(today())
 month_text <- glue("Month: {month_no}")
-day_of_year <- yday(now)
+day_of_year <- yday(today())
 day_of_year_text <- glue("Day: {day_of_year}")
+year_days <- if_else(leap_year(2020), 366, 365)
+elapsed <- round(day_of_year / year_days, 2) * 100
+elapsed_text <- glue("Elapsed: {elapsed}%")
 
-month_name <- toupper(as.character(month(now, label = TRUE, abbr = FALSE)))
 
-day_of_month <- day(now)
+month_name <- toupper(as.character(month(today(), label = TRUE, abbr = FALSE)))
+
+day_of_month <- day(today())
 time_local <- glue("{hour(now)}:{minute(now)}")
 time_TR <- glue("{hour(now)+3}:{minute(now)}") # need better tz conversion
 time_FR <- glue("{hour(now)+1}:{minute(now)}") # need better tz conversion
 time_ET <- glue("{hour(now)-5}:{minute(now)}") # need better tz conversion
 time_PT <- glue("{hour(now)-8}:{minute(now)}") # need better tz conversion
 
-day_name <- toupper(as.character(wday(now, label = TRUE, abbr = FALSE)))
+day_name <- toupper(as.character(wday(today(), label = TRUE, abbr = FALSE)))
 holiday <- "Boxing Day"
 birthday <- "First Last"
 birthday_text <- glue("🎈{birthday}")
@@ -55,25 +79,27 @@ function_text <- glue("{function_pkg}::{function_name}()\n{function_title}")
 
 ggplot() +
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
-  geom_hline(yintercept = 0.9) +
-  geom_hline(yintercept = 0.1) +
+  geom_hline(yintercept = 0.90) +
+  geom_hline(yintercept = 0.12) +
   # top
-  geom_text(aes(x = 0.0, y = 0.98), label = moon_phase, hjust = "left") +
-  geom_text(aes(x = 0.5, y = 0.98), label = day_change_text, hjust = "center") +
-  geom_text(aes(x = 1, y = 1), label = sunrise_text, hjust = "right") +
-  geom_text(aes(x = 1, y = 0.94), label = sunset_text, hjust = "right") +
+  geom_text(aes(x = 0.0, y = 0.98), label = moon_phase_text, hjust = "left", size = 5) +
+  geom_moon(aes(x = 0.2, y = 0.98, ratio = 1), fill = "black") +
+  geom_moon(aes(x = 0.2, y = 0.98, ratio = moon_ratio)) +
+  geom_text(aes(x = 0.5, y = 0.98), label = day_change_text, hjust = "center", size = 5) +
+  geom_text(aes(x = 1, y = 1), label = sunrise_today, hjust = "right", size = 5) +
+  geom_text(aes(x = 1, y = 0.94), label = sunset_today, hjust = "right", size = 5) +
   # middle
-  geom_text(aes(x = 0.0, y = 0.88), label = year_text, hjust = "left") +
-  geom_text(aes(x = 0.33, y = 0.88), label = month_text, hjust = "center") +
-  geom_text(aes(x = 0.66, y = 0.88), label = day_of_year_text, hjust = "center") +
-  geom_text(aes(x = 1, y = 0.88), label = "???", hjust = "right") +
-  geom_text(aes(x = 0.5, y = 0.8), label = month_name, hjust = "center", vjust = "center", size = 12) +
+  geom_text(aes(x = 0.0, y = 0.86), label = year_text, hjust = "left", size = 4) +
+  geom_text(aes(x = 0.35, y = 0.86), label = month_text, hjust = "center", size = 4) +
+  geom_text(aes(x = 0.6, y = 0.86), label = day_of_year_text, hjust = "center", size = 4) +
+  geom_text(aes(x = 1, y = 0.86), label = elapsed_text, hjust = "right", size = 4) +
+  geom_text(aes(x = 0.5, y = 0.78), label = month_name, hjust = "center", vjust = "center", size = 12) +
   geom_text(aes(x = 0.2, y = 0.55), label = day_of_month, hjust = "center", vjust = "center", size = 50) +
-  geom_text(aes(x = 0.5, y = 0.22), label = day_name, hjust = "center", vjust = "bottom", size = 10) +
-  geom_text(aes(x = 0.5, y = 0.17), label = holiday, hjust = "center", vjust = "bottom") +
-  geom_text(aes(x = 0.5, y = 0.12), label = birthday_text, hjust = "center", vjust = "bottom") +
+  geom_text(aes(x = 0.5, y = 0.27), label = day_name, hjust = "center", vjust = "bottom", size = 10) +
+  geom_text(aes(x = 0.5, y = 0.21), label = holiday, hjust = "center", vjust = "bottom", size = 5) +
+  geom_text(aes(x = 0.5, y = 0.16), label = birthday_text, hjust = "center", vjust = "bottom", size = 5) +
   # bottom
-  geom_text(aes(x = 0, y = 0), label = function_text, hjust = "left", vjust = "bottom") +
+  geom_text(aes(x = 0, y = 0), label = function_text, hjust = "left", vjust = "bottom", size = 5) +
   # theme
   theme(
     plot.background = element_rect(color = "black"),
@@ -81,7 +107,10 @@ ggplot() +
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     axis.title = element_blank()
-  )
+  ) +
+  draw_image("img/icons8-sunrise-80.png", x = 0.87, y = 0.98, width = 0.07, height = 0.07, hjust = 1, vjust = 0) +
+  draw_image("img/icons8-sunset-80.png", x = 0.87, y = 0.92, width = 0.07, height = 0.07, hjust = 1, vjust = 0)
+
 
 # switch out background grob
 # https://stackoverflow.com/questions/48199791/rounded-corners-in-ggplot2
@@ -97,3 +126,7 @@ plot(g)
 
 
 #FONT: TEKO MEDIUM 500 - https://fonts.google.com/specimen/Teko?category=Sans+Serif,Display&thickness=5&width=2&preview.text=PERSEMBE%206%20SUBAT&preview.text_type=custom
+
+ggsave(device = "bmp", filename = "saatli-maarif.bmp",
+       height = 8.8, width = 5.28, dpi = 100,
+       antialias = "none")
