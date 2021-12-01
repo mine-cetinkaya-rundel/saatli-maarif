@@ -9,6 +9,7 @@ library(cowplot)
 library(gggibbous)
 library(magick)
 library(showtext)
+library(grid)
 
 # add fonts --------------------------------------------------------------------
 
@@ -37,16 +38,18 @@ moon_phase_text <- case_when(
 )
 moon_phase_text <- str_replace(moon_phase_text, " ", "\n")
 
-sun_stuff_today <- suncalc::getSunlightTimes(date = Sys.Date(), lat = 55.9533, lon = -3.1883)
+lat_durham <- 35.9940
+lon_durham <- -78.8986
+sun_stuff_today <- suncalc::getSunlightTimes(date = Sys.Date(), lat = lat_durham, lon = lon_durham, tz = "EST")
 sunrise_today <- format(sun_stuff_today$sunrise, "%H:%M")
 sunset_today <- format(sun_stuff_today$sunset, "%H:%M")
 
-sun_stuff_yesterday <- suncalc::getSunlightTimes(date = Sys.Date() - 1, lat = 55.9533, lon = -3.1883)
+sun_stuff_yesterday <- suncalc::getSunlightTimes(date = Sys.Date() - 1, lat = lat_durham, lon = lon_durham, tz = "EST")
 sun_out_today <- sun_stuff_today$sunset - sun_stuff_today$sunrise
 sun_out_yesterday <- sun_stuff_yesterday$sunset - sun_stuff_yesterday$sunrise
 sun_out_diff <- as.numeric(sun_out_today - sun_out_yesterday) * 60
 day_change_length <- round(abs(sun_out_diff))
-day_change_direction <- if_else(sign(sun_out_diff) == 1, "more", "less")
+day_change_direction <- if_else(sign(sun_out_diff) == 1, "more", "fewer")
 day_change_minute_pluralization <- if_else(day_change_length == 1, "minute", "minutes")
 day_change_text <- glue("{day_change_length} {day_change_direction} {day_change_minute_pluralization}\nof daylight")
 
@@ -69,13 +72,6 @@ month_name <- toupper(as.character(month(today, label = TRUE, abbr = FALSE)))
 day_of_month <- day(today)
 day_name <- toupper(as.character(wday(today, label = TRUE, abbr = FALSE)))
 
-time_local <- glue("{hour(now)}:{minute(now)}")
-time_TR <- glue("{hour(now)+3}:{minute(now)}") # need better tz conversion
-time_FR <- glue("{hour(now)+1}:{minute(now)}") # need better tz conversion
-time_ET <- glue("{hour(now)-5}:{minute(now)}") # need better tz conversion
-time_PT <- glue("{hour(now)-8}:{minute(now)}") # need better tz conversion
-
-
 significant_day <- significant_days %>%
   filter(
     month == month_no,
@@ -83,28 +79,89 @@ significant_day <- significant_days %>%
   ) %>%
   pull(what)
 
+if(length(significant_day) == 0){
+  significant_day = ""
+}
+
 birthday <- birthdays %>%
   filter(
     month == month_no,
     day   == day_of_month
   ) %>%
   pull(who)
-birthday_text <- glue("Birthday: {birthday}")
 
-chance_of_precipitation <- 0.8
+if(length(birthday) == 0){
+  birthday_text = "No birthdays today"
+} else {
+  birthday_text <- glue("Birthday: {birthday}")
+}
+
+# clocks -----------------------------------------------------------------------
+
+draw_clock <- function(tzone = "America/New_York", city = "Durham"){
+
+  # create tibble
+  minutes <- tibble(x = 0:60, y = 1)
+  hours <- filter(minutes, x %% 5 == 0)
+
+  # determine now
+  now <- now(tzone = tzone)
+
+  # find time now
+  min_now <- minute(now)
+
+  if(hour(now) >= 12){
+    hour_now <- (hour(now) - 12)*5 + min_now/60*5
+  } else {
+    hour_now <- hour(now)*5 + min_now/60*5
+  }
+
+  ggplot() +
+    geom_point(data = minutes, aes(x = x, y = y), size = 0.8) +
+    geom_point(data = hours, aes(x = x, y = y),
+               size = 2, show.legend = FALSE) +
+    geom_point(aes(x = 0, y = 0), size = 3) +
+    coord_polar() +
+    expand_limits(y = c(0, 1)) +
+    theme_void() +
+    theme(
+      axis.ticks = element_blank(),
+      axis.text.y = element_blank(),
+    ) +
+    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), size = 1) +
+    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), size = 1) +
+    annotate(geom = "text", x = 30, y = 0.5, label = city, size = 18)
+}
+
+clock_local <- draw_clock()
+clock_IST <- draw_clock(tzone = "Europe/Istanbul", city = "Istanbul")
+clock_PAR <- draw_clock(tzone = "Europe/Paris", city = "Paris")
+clock_LAX <- draw_clock(tzone = "America/Los_Angeles", city = "Los Angeles")
+
+ggsave(clock_local, filename = "img/clock_local.png")
+ggsave(clock_IST, filename = "img/clock_IST.png")
+ggsave(clock_PAR, filename = "img/clock_PAR.png")
+ggsave(clock_LAX, filename = "img/clock_LAX.png")
 
 # bottom portion inputs --------------------------------------------------------
 
-function_pkg <- "dplyr"
-function_name <- "summarise"
-function_title <- "Summarise each group to fewer rows"
-function_text <- glue("{function_pkg}::{function_name}()\n{function_title}")
+funs <- tribble(
+  ~pkg, ~fun, ~description,
+  "dplyr", "summarise", "Summarise each group to fewer rows",
+  "tidyr", "hoist", "Rectangle a nested list into a tidy tibble",
+  "ggplot2", "geom_spoke", "Line segments parameterised by location, direction and distance"
+)
+
+function_text <- funs %>%
+  slice_sample(n = 1) %>%
+  mutate(text = glue("{pkg}::{fun}()\n{description}")) %>%
+  pull(text)
 
 # plot -------------------------------------------------------------------------
 
 showtext_auto()
 
-ggplot() +
+p <- ggplot() +
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
   geom_hline(yintercept = 0.90) +
   geom_hline(yintercept = 0.12) +
@@ -136,7 +193,11 @@ ggplot() +
     axis.title = element_blank()
   ) +
   draw_image("img/icons8-sunrise-80.png", x = 0.87, y = 0.98, width = 0.07, height = 0.07, hjust = 1, vjust = 0) +
-  draw_image("img/icons8-sunset-80.png", x = 0.87, y = 0.92, width = 0.07, height = 0.07, hjust = 1, vjust = 0)
+  draw_image("img/icons8-sunset-80.png", x = 0.87, y = 0.92, width = 0.07, height = 0.07, hjust = 1, vjust = 0) +
+  draw_image("img/clock_local.png", x = 0.5, y = 0.52, width = 0.22, height = 0.22) +
+  draw_image("img/clock_IST.png", x = 0.7, y = 0.52, width = 0.22, height = 0.22) +
+  draw_image("img/clock_PAR.png", x = 0.5, y = 0.32, width = 0.22, height = 0.22) +
+  draw_image("img/clock_LAX.png", x = 0.7, y = 0.32, width = 0.22, height = 0.22)
 
 
 # switch out background grob
