@@ -117,10 +117,10 @@ draw_clock <- function(tzone = "America/New_York", city = "Durham"){
   }
 
   ggplot() +
-    geom_point(data = minutes, aes(x = x, y = y), size = 1) +
+    geom_point(data = minutes, aes(x = x, y = y), size = 2) +
     geom_point(data = hours, aes(x = x, y = y),
-               size = 3, show.legend = FALSE) +
-    geom_point(aes(x = 0, y = 0), size = 3) +
+               size = 4, show.legend = FALSE) +
+    geom_point(aes(x = 0, y = 0), size = 4) +
     coord_polar() +
     expand_limits(y = c(0, 1)) +
     theme_void() +
@@ -128,8 +128,8 @@ draw_clock <- function(tzone = "America/New_York", city = "Durham"){
       axis.ticks = element_blank(),
       axis.text.y = element_blank(),
     ) +
-    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), size = 1) +
-    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), size = 1) +
+    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), size = 2) +
+    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), size = 2) +
     annotate(geom = "text", x = 30, y = 0.5, label = city, size = 18)
 }
 
@@ -183,7 +183,7 @@ p <- ggplot() +
   geom_text(aes(x = 0.5, y = 0.21), label = significant_day, hjust = "center", vjust = "bottom", size = 4) +
   geom_text(aes(x = 0.5, y = 0.16), label = birthday_text, hjust = "center", vjust = "bottom", size = 4) +
   # bottom
-  geom_text(aes(x = 0, y = 0), label = function_text, hjust = "left", vjust = "bottom", size = 5) +
+  geom_text(aes(x = 0, y = 0), label = function_text, hjust = "left", vjust = "bottom", size = 4) +
   # theme
   theme(
     plot.background = element_rect(color = "black"),
