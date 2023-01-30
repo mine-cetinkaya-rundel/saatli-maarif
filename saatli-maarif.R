@@ -13,8 +13,8 @@ library(grid)
 
 # add fonts --------------------------------------------------------------------
 
-font_add(family = "HelveticaCompressed", regular = "fonts/HelveticaComp.ttf")
-font_add(family = "HelveticaNeue85Heavy", regular = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
+font_add(family = "Helvetica-Compressed", regular = "Fonts/HelveticaComp.ttf")
+font_add(family = "Helvetica Neue LT Std", regular = "Fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
 
 # load data --------------------------------------------------------------------
 
@@ -117,10 +117,10 @@ draw_clock <- function(tzone = "America/New_York", city = "Durham"){
   }
 
   ggplot() +
-    geom_point(data = minutes, aes(x = x, y = y), size = 2) +
+    geom_point(data = minutes, aes(x = x, y = y), size = 3) +
     geom_point(data = hours, aes(x = x, y = y),
-               size = 4, show.legend = FALSE) +
-    geom_point(aes(x = 0, y = 0), size = 4) +
+               size = 6, show.legend = FALSE) +
+    geom_point(aes(x = 0, y = 0), size = 6) +
     coord_polar() +
     expand_limits(y = c(0, 1)) +
     theme_void() +
@@ -128,8 +128,8 @@ draw_clock <- function(tzone = "America/New_York", city = "Durham"){
       axis.ticks = element_blank(),
       axis.text.y = element_blank(),
     ) +
-    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), linewidth = 2) +
-    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), linewidth = 2) +
+    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), linewidth = 4) +
+    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), linewidth = 4) +
     annotate(geom = "text", x = 30, y = 0.5, label = city, size = 18)
 }
 
@@ -177,9 +177,9 @@ p <- ggplot() +
   geom_text(aes(x = 0.35, y = 0.86), label = month_text, hjust = "center", size = 4) +
   geom_text(aes(x = 0.6, y = 0.86), label = day_of_year_text, hjust = "center", size = 4) +
   geom_text(aes(x = 1, y = 0.86), label = elapsed_text, hjust = "right", size = 4) +
-  geom_text(aes(x = 0.5, y = 0.78), label = month_name, hjust = "center", vjust = "center", size = 12, family = "HelveticaNeue85Heavy") +
-  geom_text(aes(x = 0.3, y = 0.55), label = day_of_month, hjust = "center", vjust = "center", size = 70, family = "HelveticaCompressed") +
-  geom_text(aes(x = 0.5, y = 0.27), label = day_name, hjust = "center", vjust = "bottom", size = 10, family = "HelveticaNeue85Heavy") +
+  geom_text(aes(x = 0.5, y = 0.78), label = month_name, hjust = "center", vjust = "center", size = 12, family = "Helvetica Neue LT Std") +
+  geom_text(aes(x = 0.3, y = 0.55), label = day_of_month, hjust = "center", vjust = "center", size = 70, family = "Helvetica-Compressed") +
+  geom_text(aes(x = 0.5, y = 0.27), label = day_name, hjust = "center", vjust = "bottom", size = 10, family = "Helvetica Neue LT Std") +
   geom_text(aes(x = 0.5, y = 0.21), label = significant_day, hjust = "center", vjust = "bottom", size = 4) +
   geom_text(aes(x = 0.5, y = 0.16), label = birthday_text, hjust = "center", vjust = "bottom", size = 4) +
   # bottom
@@ -194,10 +194,10 @@ p <- ggplot() +
   ) +
   draw_image("img/icons8-sunrise-80.png", x = 0.87, y = 0.98, width = 0.07, height = 0.07, hjust = 1, vjust = 0) +
   draw_image("img/icons8-sunset-80.png", x = 0.87, y = 0.92, width = 0.07, height = 0.07, hjust = 1, vjust = 0) +
-  draw_image("img/clock_local.png", x = 0.6, y = 0.52, width = 0.22, height = 0.22) +
-  draw_image("img/clock_IST.png", x = 0.8, y = 0.52, width = 0.22, height = 0.22) +
-  draw_image("img/clock_PAR.png", x = 0.6, y = 0.32, width = 0.22, height = 0.22) +
-  draw_image("img/clock_LAX.png", x = 0.8, y = 0.32, width = 0.22, height = 0.22)
+  draw_image("img/clock_local.png", x = 0.65, y = 0.52, width = 0.22, height = 0.22) +
+  draw_image("img/clock_IST.png", x = 0.85, y = 0.52, width = 0.22, height = 0.22) +
+  draw_image("img/clock_PAR.png", x = 0.65, y = 0.32, width = 0.22, height = 0.22) +
+  draw_image("img/clock_LAX.png", x = 0.85, y = 0.32, width = 0.22, height = 0.22)
 
 
 # switch out background grob
@@ -213,6 +213,5 @@ g$grobs[[1]] <- round_bg
 
 #FONT: TEKO MEDIUM 500 - https://fonts.google.com/specimen/Teko?category=Sans+Serif,Display&thickness=5&width=2&preview.text=PERSEMBE%206%20SUBAT&preview.text_type=custom
 
-ggsave(plot = g, device = "bmp", filename = "saatli-maarif.bmp",
-       height = 8.8, width = 5.28, dpi = 100,
-       antialias = "none")
+ggsave(plot = g, device = "jpeg", filename = "saatli-maarif.jpeg",
+       height = 8.8, width = 5.28, dpi = 100)
