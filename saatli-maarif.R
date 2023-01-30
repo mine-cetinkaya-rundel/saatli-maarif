@@ -10,6 +10,8 @@ suppressPackageStartupMessages(library(gggibbous))
 suppressPackageStartupMessages(library(magick))
 suppressPackageStartupMessages(library(showtext))
 suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(systemfonts))
+
 
 # add fonts --------------------------------------------------------------------
 
