@@ -1,15 +1,15 @@
 # load packages ----------------------------------------------------------------
 
-library(tidyverse)
-library(lubridate)
-library(glue)
-library(grid)
-library(suncalc)
-library(cowplot)
-library(gggibbous)
-library(magick)
-library(showtext)
-library(grid)
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(glue))
+suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(suncalc))
+suppressPackageStartupMessages(library(cowplot))
+suppressPackageStartupMessages(library(gggibbous))
+suppressPackageStartupMessages(library(magick))
+suppressPackageStartupMessages(library(showtext))
+suppressPackageStartupMessages(library(grid))
 
 # add fonts --------------------------------------------------------------------
 
@@ -20,12 +20,12 @@ systemfonts::register_font(
   plain = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf"
 )
 
-font_add(family = "HelveticaNeueLTStd-Hv", regular = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
+#font_add(family = "HelveticaNeueLTStd-Hv", regular = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
 
 # load data --------------------------------------------------------------------
 
-significant_days <- read_csv("significant-days.csv")
-birthdays <- read_csv("birthdays.csv")
+significant_days <- read_csv("significant-days.csv", show_col_types = FALSE)
+birthdays <- read_csv("birthdays.csv", show_col_types = FALSE)
 
 # top portion inputs -----------------------------------------------------------
 
@@ -217,7 +217,7 @@ round_bg <- grid::roundrectGrob(
 )
 g$grobs[[1]] <- round_bg
 
-#FONT: TEKO MEDIUM 500 - https://fonts.google.com/specimen/Teko?category=Sans+Serif,Display&thickness=5&width=2&preview.text=PERSEMBE%206%20SUBAT&preview.text_type=custom
+# save
 
 ggsave(plot = g, device = "bmp", filename = "saatli-maarif.bmp",
        height = 8.8, width = 5.28, dpi = 100)
