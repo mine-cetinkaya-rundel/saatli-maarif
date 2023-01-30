@@ -20,7 +20,7 @@ systemfonts::register_font(
   plain = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf"
 )
 
-#font_add(family = "HelveticaNeueLTStd-Hv", regular = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
+# font_add(family = "HelveticaNeueLTStd-Hv", regular = "fonts/Helvetica-Neue-LT-Std-85-Heavy_22545.ttf")
 
 # load data --------------------------------------------------------------------
 
@@ -33,14 +33,14 @@ moon_stuff_today <- suncalc::getMoonIllumination(date = Sys.Date())
 moon_ratio <- moon_stuff_today$fraction
 moon_phase_value <- moon_stuff_today$phase
 moon_phase_text <- case_when(
-  moon_phase_value == 0                            ~ "New Moon",
-  moon_phase_value > 0 & moon_phase_value < 0.25   ~ "Waxing Crescent",
-  moon_phase_value == 0.25                         ~ "First Quarter",
+  moon_phase_value == 0 ~ "New Moon",
+  moon_phase_value > 0 & moon_phase_value < 0.25 ~ "Waxing Crescent",
+  moon_phase_value == 0.25 ~ "First Quarter",
   moon_phase_value > 0.25 & moon_phase_value < 0.5 ~ "Waxing Gibbous",
-  moon_phase_value == 0.25                         ~ "Full Moon",
+  moon_phase_value == 0.25 ~ "Full Moon",
   moon_phase_value > 0.5 & moon_phase_value < 0.75 ~ "Waning Gibbous",
-  moon_phase_value == 0.75                         ~ "Last Quarter",
-  moon_phase_value > 0.75                          ~ "Waning Crescent"
+  moon_phase_value == 0.75 ~ "Last Quarter",
+  moon_phase_value > 0.75 ~ "Waning Crescent"
 )
 moon_phase_text <- str_replace(moon_phase_text, " ", "\n")
 
@@ -64,7 +64,7 @@ day_change_text <- glue("{day_change_length} {day_change_direction} {day_change_
 now <- now()
 today <- today()
 
-year  <- year(today)
+year <- year(today)
 year_text <- glue("Year: {year}")
 month_no <- month(today)
 month_text <- glue("Month: {month_no}")
@@ -81,31 +81,30 @@ day_name <- toupper(as.character(wday(today, label = TRUE, abbr = FALSE)))
 significant_day <- significant_days %>%
   filter(
     month == month_no,
-    day   == day_of_month
+    day == day_of_month
   ) %>%
   pull(what)
 
-if(length(significant_day) == 0){
-  significant_day = ""
+if (length(significant_day) == 0) {
+  significant_day <- ""
 }
 
 birthday <- birthdays %>%
   filter(
     month == month_no,
-    day   == day_of_month
+    day == day_of_month
   ) %>%
   pull(who)
 
-if(length(birthday) == 0){
-  birthday_text = "No birthdays today"
+if (length(birthday) == 0) {
+  birthday_text <- "No birthdays today"
 } else {
   birthday_text <- glue("Birthday: {birthday}")
 }
 
 # clocks -----------------------------------------------------------------------
 
-draw_clock <- function(tzone = "America/New_York", city = "Durham"){
-
+draw_clock <- function(tzone = "America/New_York", city = "Durham") {
   # create tibble
   minutes <- tibble(x = 0:60, y = 1)
   hours <- filter(minutes, x %% 5 == 0)
@@ -116,16 +115,18 @@ draw_clock <- function(tzone = "America/New_York", city = "Durham"){
   # find time now
   min_now <- minute(now)
 
-  if(hour(now) >= 12){
-    hour_now <- (hour(now) - 12)*5 + min_now/60*5
+  if (hour(now) >= 12) {
+    hour_now <- (hour(now) - 12) * 5 + min_now / 60 * 5
   } else {
-    hour_now <- hour(now)*5 + min_now/60*5
+    hour_now <- hour(now) * 5 + min_now / 60 * 5
   }
 
   ggplot() +
     geom_point(data = minutes, aes(x = x, y = y), size = 3) +
-    geom_point(data = hours, aes(x = x, y = y),
-               size = 6, show.legend = FALSE) +
+    geom_point(
+      data = hours, aes(x = x, y = y),
+      size = 6, show.legend = FALSE
+    ) +
     geom_point(aes(x = 0, y = 0), size = 6) +
     coord_polar() +
     expand_limits(y = c(0, 1)) +
@@ -205,7 +206,6 @@ p <- ggplot() +
   draw_image("img/clock_PAR.png", x = 0.65, y = 0.32, width = 0.22, height = 0.22) +
   draw_image("img/clock_LAX.png", x = 0.85, y = 0.32, width = 0.22, height = 0.22)
 
-
 # switch out background grob
 # https://stackoverflow.com/questions/48199791/rounded-corners-in-ggplot2
 g <- ggplotGrob(p)
@@ -217,7 +217,9 @@ round_bg <- grid::roundrectGrob(
 )
 g$grobs[[1]] <- round_bg
 
-# save
+# save plot image --------------------------------------------------------------
 
-ggsave(plot = g, device = "bmp", filename = "saatli-maarif.bmp",
-       height = 8.8, width = 5.28, dpi = 100)
+ggsave(
+  plot = g, device = "bmp", filename = "saatli-maarif.bmp",
+  height = 8.8, width = 5.28, dpi = 100
+)
