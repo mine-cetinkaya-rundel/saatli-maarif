@@ -128,8 +128,8 @@ draw_clock <- function(tzone = "America/New_York", city = "Durham"){
       axis.ticks = element_blank(),
       axis.text.y = element_blank(),
     ) +
-    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), size = 2) +
-    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), size = 2) +
+    geom_segment(aes(x = hour_now, xend = hour_now, y = 0, yend = 0.6), linewidth = 2) +
+    geom_segment(aes(x = min_now, xend = min_now, y = 0, yend = 0.9), linewidth = 2) +
     annotate(geom = "text", x = 30, y = 0.5, label = city, size = 18)
 }
 
