@@ -76,26 +76,26 @@ year_days <- if_else(leap_year(2020), 366, 365)
 elapsed <- round(day_of_year / year_days, 2) * 100
 elapsed_text <- glue("Elapsed: {elapsed}%")
 
-month_name <- toupper(as.character(month(today, label = TRUE, abbr = FALSE)))
+month_name <- str_to_upper(as.character(month(today, label = TRUE, abbr = FALSE)))
 day_of_month <- day(today)
-day_name <- toupper(as.character(wday(today, label = TRUE, abbr = FALSE)))
+day_name <- str_to_upper(as.character(wday(today, label = TRUE, abbr = FALSE)))
 
-significant_day <- significant_days %>%
+significant_day <- significant_days |>
   filter(
     month == month_no,
     day == day_of_month
-  ) %>%
+  ) |>
   pull(what)
 
 if (length(significant_day) == 0) {
   significant_day <- ""
 }
 
-birthday <- birthdays %>%
+birthday <- birthdays |>
   filter(
     month == month_no,
     day == day_of_month
-  ) %>%
+  ) |>
   pull(who)
 
 if (length(birthday) == 0) {
@@ -161,9 +161,9 @@ funs <- tribble(
   "ggplot2", "geom_spoke", "Line segments parameterised by location, direction and distance"
 )
 
-function_text <- funs %>%
-  slice_sample(n = 1) %>%
-  mutate(text = glue("{pkg}::{fun}()\n{description}")) %>%
+function_text <- funs |>
+  slice_sample(n = 1) |>
+  mutate(text = glue("{pkg}::{fun}()\n{description}")) |>
   pull(text)
 
 # plot -------------------------------------------------------------------------
